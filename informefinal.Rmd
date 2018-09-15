@@ -1,0 +1,184 @@
+---
+title: "Patrones morfologicos en peces cartilaginosos"
+author: "Daniela Moraga"
+date: "28 de agosto de 2018"
+bibliography:  bibliografia.bib  
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(broom)
+library(knitr)
+library(dplyr)
+library(devtools)
+library(rmarkdown)
+library(knitr)
+library(ggplot2)
+library(caper)
+library(letsR)
+library(ape)
+library(geiger)
+library(raster)
+library(rgdal)
+library(grid)
+library(tinytex)
+
+
+
+
+arbolgenera <- read.tree("arbolgenera")
+bodysize <- read.csv("C:/Users/Daniela Moraga/Desktop/Clases R/Taller/Taller1/bodysize.csv", sep=";")
+bodysize_1 <-read.csv("C:/Users/Daniela Moraga/Desktop/Clases R/Taller/Taller1/bodysize_1.csv", sep=";")
+
+
+Tabla.1 <- colnames(bodysize) 
+colnames(bodysize)<- c ("Genero", "Edad del clado(mya)", "log(Tamaño corporal)", "log(Longitud total)","Riqueza de especies", "log(Riqueza de especies)")
+
+Tabla.1 <- group_by(bodysize,`Riqueza de especies`, `Edad del clado(mya)`,`log(Tamaño corporal)`, `log(Longitud total)`, `Genero`,`log(Riqueza de especies)`)%>%  filter(!is.na(`Riqueza de especies`)) %>% filter(!is.na(`Edad del clado(mya)`)) %>% filter(!is.na(`log(Longitud total)`))%>% filter(!is.na(`log(Riqueza de especies)`)) 
+
+```
+
+
+
+##Introducción
+
+Entender como ha ocurrido la evolución en los tamaños corporales a través de los linajes del phylum Animalia, es uno de los mayores objetivos de la ecología y biología evolutiva. En este sentido, el mecanismo de los patrones corporales se ha utilizado para explicar, los diferentes estilos de vida que presentan las especies en determinado nicho ecológico, con el fin de entender más acerca de la historia de vida de los distintos clados [@arim2007relationship]; 
+[@rabosky2013rates].
+
+
+Las variaciones de la morfología, en la historia de vida de los clados ha tenido un efecto directo en la longevidad [@brown1993evolution] y la diversidad de especies. Existen dos grandes hipotesis que explican esta relación: La primera hipótesis corresponde a la edad del clado [@mcpeek2007clade]). Donde la diversidad de especies en un clado aumenta con relación a la edad, es decir clados más antiguos han tenido más tiempo para acumular especies, por lo cual son más diversos.  Luego esta ii) La Hipótesis de diversificación de especies, y esta explica como algunos clados con ciertos atributos presentan mayor riqueza de especies que otros [@kozak2016explains]. El objetivo de este trabajo es determinar que variables (i.g., Tamaño corporal, edad de diversificación del género) explican la riqueza de especies, a partir de modelos lineales y el criterio de AIC. 
+
+
+
+##Metodos
+Se utilizo la base de datos "bodysize_1", con los promedios de las variables de la  longitud total, edad del clado y tamaño corporal para las especies de peces cartilaginosos, y mediante la función tidyverse se genero una nueva tabla de datos con valores promedio y elimino los datos faltantes para la riqueza de especies como se observa en la tabla 1. 
+
+
+Los valores de las edades del clado se obtuvieron a partir de una filogenia previamente construida(Figura 1) utilizando el marcador NADH deshidrogenasa II. La filogenia se visualizo mediante el paquete ape en R studio [@fox2018package]. Por otra parte, las graficas de las variables se realizaron utilizando el paquete ggplot2 en R studio. Luego se definió cual era el modelo que mejor explica la riqueza de especies. A partir del criterio AIC, para esto se utilizó el paquete broom. 
+
+A continuacion se presentan los modelos para explicar la riqueza de especies en los generos:
+
+- Modelo 1.  La riqueza de especies explicada por la variación morfológica.
+
+- Modelo 2. La riqueza de especies es explicada por la edad de divergencia del clado(mya)
+
+
+- Modelo 3. La riqueza de especies explicada por  la variación morfológica y edad del clado(mya).
+
+
+##Resultados 
+
+A partir de la reconstrucción filogenética para las especies de Condrictios, se obtuvo la datación de las edades de los nodos por especie, como se observa en la figura 1.  Adicionalmente se realizó un árbol a nivel de genero.
+
+
+```{r, echo=FALSE, message=FALSE, }
+plot(arbolgenera, main = "Filogenia Chondrycthyes", font = 0.3, cex = 0.7, use.edge.length = FALSE)
+
+```
+
+A continuación se observa la lista de las variables promedio de la edad de divergencia de los generos y los promedios de las variables del tamaño corporal, longitud total y riqueza de especies.
+
+
+Tabla 1. Lista de especies de peces cartilaginosos, promedio por genero del tiempo de divergencia del grupo, valores del logaritmo del tamaño corporal, longitud total, y riqueza de especies.
+
+```{r cars, message=FALSE}
+kable(Tabla.1)
+
+```
+   
+Luego se graficó las variables de la riqueza de especies para cada uno de los géneros a través de una relación log- log  entre la riqueza de especies y el tamaño corporal como se observa en la figura 2. Tambien se grafico,  la riqueza de especies con la edad de diversificación para los géneros de condrictios, con la tendencia de los tamaños corporales como se observa en la figura 3.  
+
+
+```{r pressure, echo=FALSE, warning=FALSE}
+ggplot(bodysize, aes(`Edad del clado(mya)`,`log(Riqueza de especies)`)) + geom_point(aes(size =`log(Tamaño corporal)`)) + stat_smooth(method = "lm", formula = y ~ I(x^2) + x, alpha = 0.5)
+
+```
+
+Figura 2.  Relación entre la riqueza de especies y las edades de los clados a nivel de genero para los peces cartilaginosos. 
+
+```{r,echo=FALSE, warning=FALSE}
+ggplot(bodysize, aes(`log(Tamaño corporal)`,`log(Riqueza de especies)`))+ stat_smooth(method = "lm", formula = y ~ I(x^2) + x, alpha = 0.5)
+```
+Figura 3. Relación  log- log entre la riqueza y el tamaño corporal para las especies de peces cartilaginosos.
+
+
+A continuacion, estan los valores de AIC y p-value para cada uno de los modelos que explican mejor la riqueza de especies. 
+
+
+```{r setup2, include=FALSE, message=FALSE}
+# Comparacion de los modelos
+
+mod1<- lm( Species_richness ~  Log_body_size, data=bodysize_1)
+tidy(mod1)
+glance(mod1)
+Modelo.1.1 <-glance(mod1)
+Modelo.1 <- tidy(mod1) 
+
+mod2<- lm(Species_richness ~ Genera_timediv, data=bodysize_1)
+tidy(mod2)
+glance(mod2)
+Modelo.2.1 <-glance(mod2)
+Modelo.2 <- tidy(mod2) 
+
+
+
+mod3<- lm(Species_richness ~ Genera_timediv + Log_body_size, data=bodysize_1)
+tidy(mod3)
+glance(mod3)
+Modelo.3.1 <-glance(mod3)
+Modelo.3 <- tidy(mod3) 
+
+#Organizar todo en una tabla, en caso de que se pueda 
+
+# kable(glance(mod1), glance(mod2), glance(mod3))
+
+```
+
+A continuación se observan los valores del AIC, p-value y el r2, para cada uno de los modelos. 
+
+- Modelo 1.  La riqueza de especies explicada por el tiempo de divergencia de los generos. Los valores de AIC corresponden 1472 y un p-value < 0.005. 
+
+
+```{r, message=FALSE}
+
+kable(Modelo.1)
+kable(Modelo.1.1)
+```
+
+- Modelo 2. La riqueza de especies es explicada por la edad de divergencia de lo generos (mya).  Los valores de AIC corresponden 2517 y un p-value no significativo.
+
+
+
+
+
+```{r, message=FALSE}
+kable(Modelo.2)
+kable(Modelo.2.1) 
+```
+
+
+- Modelo 3. La riqueza de especies explicada por la variación morfológica y edad  de divergencia del clado(mya). Los valores de AIC corresponden a 638 y un p-value < 0.005. 
+
+
+```{r, message=FALSE}
+kable(Modelo.3)
+kable(Modelo.3.1)
+
+```
+
+##Conclusiones
+
+- A partir del criterio AIC , El modelo que mejor se ajusta a los datos, corresponde al Modelo 3. (i.g., La Riqueza de especies es explicada por las variables del tamaño corporal y el edad  de la divergencia del género) con un valor de AIC de 638  y un p-value <0.005.
+
+-  Es posible que los tamañoS corporales hubieran sido mayor hace aproximadamente 150 mya.
+
+
+#Bibliografia 
+
+
